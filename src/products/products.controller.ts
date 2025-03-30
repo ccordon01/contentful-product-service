@@ -5,7 +5,7 @@ import { MessagePattern } from '@nestjs/microservices';
 export class ProductsController {
   @MessagePattern('create-products')
   createProducts(message: any) {
-    console.log('Mensaje recibido:', message);
+    console.log('Mensaje recibido:');
     return `Mensaje recibido: ${message}`;
   }
 }
