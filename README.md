@@ -1,98 +1,145 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# AD Products API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This project is a backend service for managing product data. It fetches data from Contentful, inserts it into a MongoDB database, and provides both public and private endpoints for interacting with the data.
 
-## Description
+## Setup
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### Prerequisites
 
-## Project setup
+1. **Docker**: Make sure Docker is installed on your system.
+2. **Node.js**: Ensure Node.js is installed if you plan to run the application locally without Docker.
 
-```bash
-$ npm install
+### Environment Variables
+
+#### Run Locally
+
+Create a file named `.env` in the root directory with the following content:
+
+```env
+# APP
+APP_PORT=3000
+
+# RABBITMQ
+RABBITMQ_URL=amqp://amqp:5672
+
+# DATABASE
+MONGODB_URI=mongodb://mongodb:27017/ad_contentful_db
+
+# CONTENTFUL API
+CONTENTFUL_URL=https://cdn.contentful.com
+CONTENTFUL_SPACE_ID=
+CONTENTFUL_ACCESS_TOKEN=
+CONTENTFUL_ENVIRONMENT=
+CONTENTFUL_CONTENT_TYPE=
+
+# AUTHENTICATION
+JWT_SECRET=7f5fbdda-4921-49ef-9d60-94d681902f2a
 ```
 
-## Compile and run the project
+Add the access needed to interact with the Contentful API, as this is a public repository no keys will be exposed here.
 
-```bash
-# development
-$ npm run start
+**Note:** Don't worry about JWT_SECRET, trust me, it's a necessary variable for the app but sharing its value doesn't compromise the information.
 
-# watch mode
-$ npm run start:dev
+#### Dockerfile
 
-# production mode
-$ npm run start:prod
+You should customize the '.env.docker' file with the information mentioned above, this is a template you can use to be sure of the name of the variables, remember that for this you need to have MongoDB running on your local computer. if you don't have it check the next section.
+
+```sh
+docker run -p 5100:3000 --env-file .env.docker ad-products-api
 ```
 
-## Run tests
+#### Docker Compose
 
-```bash
-# unit tests
-$ npm run test
+When using Docker Compose, you should add your environment variables to the `.env.docker-compose` file. This separate file provides the following advantages:
 
-# e2e tests
-$ npm run test:e2e
+- **Clear organization**: Each deployment method has its own configuration file
+- **Error prevention**: Avoids confusion by having context-specific configurations
 
-# test coverage
-$ npm run test:cov
+Build and Run the Application, Open a terminal and navigate to the project directory. Run the following command to build and start the services:
+
+```sh
+docker-compose up --build
 ```
 
-## Deployment
+This command starts the application and MongoDB services. The application will be available at `http://localhost:3100`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Populate the Database for the First Time
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+The application is configured to fetch data from Contentful every hour. To manually trigger data fetching and populate the database, you can use the public endpoint:
 
-```bash
-$ npm install -g mau
-$ mau deploy
+```sh
+curl -X POST http://localhost:3100/api/v1/products/fetch \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDM0NDYzODMsImV4cCI6MTc0MzQ1NzE4M30.BQd6Motz8AVWfh7JmKkeeKYXrhGZ2Mx0sLyiavmvv4c
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+**Note:** This endpoint can be used at any time not only at the beginning, its objective is to synchronize products on demand. Remember the port may vary depending on how you are running the application, please check before calling this service.
 
-## Resources
+### Swagger
 
-Check out a few resources that may come in handy when working with NestJS:
+The API documentation is available at `http://localhost:3100/api/docs`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Authentication
 
-## Support
+For the purpose of this project, you don’t need a username or password. Each time you call this service, it will provide you with a JWT token that is valid for 3 hours. This token is required to access the private endpoints.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#### Sign In
 
-## Stay in touch
+`GET /api/v1/auth/sign-in`
+Authenticates and returns a JWT token.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Assumptions
 
-## License
+For this project, the Product SKU is used as the primary identifier for products. During each synchronization with the API, products are added to the database. When a product is deleted, it is marked as deleted in our database. This approach allows us to:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Track products that have been deleted.
+- Ensure that deleted products are not included in future synchronizations.
+- Optimize database performance with an index based on productSku, making product searches and lookups significantly more efficient.
+
+### Product Synchronization
+
+The application uses a message queue system (RabbitMQ) and pagination to efficiently synchronize products from Contentful to the MongoDB database. This approach provides several benefits:
+
+#### Message Queue Architecture
+
+- **Producer/Consumer Model**: For the purpose of this project, both the consumer and producer are implemented within the same application. The producer creates individual messages for each product, and the consumer handles inserting or updating them in the database.
+- **Resilient Processing**: Using a message queue ensures that product data is not lost if an error occurs during processing. Failed operations can be retried.
+- **Asynchronous Workflow**: The synchronization process runs in the background without blocking the main application.
+
+#### Pagination Strategy
+
+- **Efficient Data Fetching**: When fetching products from Contentful, the application retrieves them in pages of 10 products at a time.
+- **Individual Processing**: After retrieving each page, the system creates one message per product and sends it to the queue.
+- **Resource Optimization**: This approach prevents overwhelming the system when dealing with large catalogs.
+- **Consistent Performance**: The combination of pagination and queue-based processing ensures consistent performance regardless of the catalog size.
+
+Each time the synchronization is triggered (either automatically or via the manual endpoint), the system:
+
+1. Fetches products from Contentful in pages of 10
+2. For each product in the page, creates an individual message in the queue
+3. Processes these messages one by one to update the database
+
+### Product Lifecycle
+
+The system manages the complete lifecycle of products as follows:
+
+#### Creation
+- When a product is detected for the first time during synchronization, all its information is recorded in MongoDB.
+- Each product receives a complete record including its SKU, name, price, stock, and other relevant attributes.
+
+#### Update
+- During subsequent synchronizations, the system looks for existing products by their SKU.
+- If the product already exists in the database, its data is updated with the most recent information from Contentful.
+- This ensures that changes such as price updates, descriptions, or inventory levels are correctly reflected.
+
+#### Deletion
+- When a product is deleted, it is not physically removed from the database.
+- Instead, it is marked as "inactive" in the system.
+- Automatically, its stock is set to 0.
+
+#### Reactivation
+- If a previously deleted product reappears is reactivated, the system will detect it in the next synchronization.
+- The product will automatically regain its "active" status.
+- Updates to its stock and other attributes will be allowed again.
+- This process requires no manual intervention and is part of the normal synchronization flow.
