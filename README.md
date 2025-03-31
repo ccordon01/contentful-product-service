@@ -105,6 +105,17 @@ For this project, the Product SKU is used as the primary identifier for products
 
 **Important for Public Endpoints**: Our API implements rate limiting (10 requests per 15 seconds per IP) to protect public endpoints from abuse. Exceeding this limit results in HTTP 429 errors.
 
+### Environment Variable Validation
+
+**Critical for Application Startup**: The application validates all required environment variables during initialization. Please ensure that:
+
+- All variables defined in the `.env`, `.env.docker`, or `.env.docker-compose` files are properly set
+- Contentful credentials (CONTENTFUL_SPACE_ID, CONTENTFUL_ACCESS_TOKEN, etc.) are valid and have appropriate permissions
+- Database connection strings point to accessible instances
+- RabbitMQ URL is correctly configured
+
+Missing or invalid environment variables will cause the application to fail on startup with specific error messages identifying the issues. Pay special attention to third-party service credentials, as authentication failures may not be immediately obvious and could affect synchronization processes.
+
 ### Product Synchronization
 
 The application uses a message queue system (RabbitMQ) and pagination to efficiently synchronize products from Contentful to the MongoDB database. This approach provides several benefits:
