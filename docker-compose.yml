@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  ad-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.docker-compose
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/ad_contentful_db
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    ports:
+      - "3100:3000"
+    networks:
+      - ad-network
+
+  mongodb:
+    image: mongo
+    ports:
+      - "27117:27017"
+    volumes:
+      - mongodbdata:/data/db
+    networks:
+      - ad-network
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5772:5672"
+      - "15772:15672"
+    networks:
+      - ad-network
+
+networks:
+  ad-network:
+
+
+volumes:
+  mongodbdata:
