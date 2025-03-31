@@ -22,7 +22,7 @@ export class ProductsService {
   /**
    * Fetches and saves products from the API every hour using a cron job.
    */
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_HOUR)
   async fetchAndSaveProductsHourly() {
     this.logger.log('Initiating Product Synchronization.');
     const PRODUCTS_PER_PAGE = 10;
