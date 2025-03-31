@@ -10,9 +10,18 @@ import { AuthModule } from './auth/auth.module';
 import { RouterModule } from '@nestjs/core';
 import { ConfigModule } from './common/modules/config/config.module';
 import { ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 15000,
+          limit: 10,
+        },
+      ],
+    }),
     ConfigModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],

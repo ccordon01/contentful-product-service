@@ -99,6 +99,12 @@ For this project, the Product SKU is used as the primary identifier for products
 - Ensure that deleted products are not included in future synchronizations.
 - Optimize database performance with an index based on productSku, making product searches and lookups significantly more efficient.
 
+### Considerations
+
+#### Rate Limiting
+
+**Important for Public Endpoints**: Our API implements rate limiting (10 requests per 15 seconds per IP) to protect public endpoints from abuse. Exceeding this limit results in HTTP 429 errors.
+
 ### Product Synchronization
 
 The application uses a message queue system (RabbitMQ) and pagination to efficiently synchronize products from Contentful to the MongoDB database. This approach provides several benefits:
@@ -145,3 +151,4 @@ The system manages the complete lifecycle of products as follows:
 - The product will automatically regain its "active" status.
 - Updates to its stock and other attributes will be allowed again.
 - This process requires no manual intervention and is part of the normal synchronization flow.
+
