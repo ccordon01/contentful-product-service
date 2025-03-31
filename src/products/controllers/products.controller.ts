@@ -24,7 +24,6 @@ import { FilterProductsDto } from '../dto/filter-products.dto';
   path: 'products',
   version: '1',
 })
-@UseGuards(AuthGuard('jwt'))
 @ApiBearerAuth()
 export class ProductsController {
   private readonly logger = new Logger(ProductsController.name);
@@ -38,7 +37,7 @@ export class ProductsController {
     });
   }
 
-  @Get('deleted-products')
+  @UseGuards(AuthGuard('jwt'))
   @ApiResponse({
     status: 200,
     type: ResponseFilterProductsDto,
@@ -47,17 +46,20 @@ export class ProductsController {
     status: 404,
     type: ErrorResponseDto,
   })
+  @Get('deleted-products')
   getDeletedProducts(
     @Query() filterProductsDto: FilterProductsDto,
   ): Promise<ResponseFilterProductsDto> {
     return this.productsService.getDeletedProducts(filterProductsDto);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('fetch')
   fetchAndSaveProducts(): Promise<void> {
     return this.productsService.fetchAndSaveProductsHourly();
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @ApiResponse({
     status: 200,
   })
@@ -70,6 +72,7 @@ export class ProductsController {
     return this.productsService.deleteProduct(productSku);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @ApiResponse({
     status: 200,
   })
@@ -82,11 +85,13 @@ export class ProductsController {
     return this.productsService.activateProduct(productSku);
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('deleted-percentage')
   percentageDeletedProducts(): Promise<ResponseDeletedProductsPercentageDto> {
     return this.productsService.percentageDeletedProducts();
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('non-deleted-percentage')
   percentageNonDeletedProducts(
     @Query()
@@ -97,6 +102,7 @@ export class ProductsController {
     );
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Get('total-products-by-brand')
   totalProductsByProductBrand(): Promise<ResponseTotalProductsByProductBrandDto> {
     return this.productsService.totalProductsByProductBrand();

@@ -131,7 +131,9 @@ export class ProductsRepository {
       productCreatedAtStartDate,
       productCreatedAtEndDate,
     } = countProductsForNonDeletedProductsReportRepositoryDto;
-    const query = {};
+    const query = {
+      productIsActive: true,
+    };
 
     if (productWithPrice === true) {
       query['productPrice'] = { $exists: true, $ne: null };
