@@ -137,6 +137,37 @@ export class ProductsService {
     };
   }
 
+  async getDeletedProducts(
+    filterProductsDto: FilterProductsDto,
+  ): Promise<ResponseFilterProductsDto> {
+    const { skip, limit } = filterProductsDto;
+
+    const { totalCount, products: _products } =
+      await this.productsRepository.findFilteredProducts(
+        filterProductsDto,
+        false,
+      );
+
+    if (totalCount === 0) {
+      throw new NotFoundException('No products found');
+    }
+
+    const products = productsRepositoryMapper(_products as Product[]);
+
+    const totalPages = Math.ceil(totalCount / limit);
+    const currentPage = skip / limit + 1;
+
+    return {
+      data: products,
+      meta: {
+        totalItems: totalCount,
+        totalPages,
+        currentPage,
+        pageSize: products.length,
+      },
+    };
+  }
+
   /**
    * Deletes a product with the given productSku.
    *

@@ -33,10 +33,11 @@ export class ProductsRepository {
 
   async findFilteredProducts(
     filterProductsDto: FilterProductsDto,
+    productIsActive: boolean = true,
   ): Promise<any> {
     const { skip, limit } = filterProductsDto;
     const query = {
-      productIsActive: true,
+      productIsActive,
     };
 
     if (filterProductsDto.productSku) {

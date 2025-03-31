@@ -18,7 +18,8 @@ import { ResponseDeletedProductsPercentageDto } from '../dto/response-deleted-pr
 import { ResponseNonDeletedProductsPercentageDto } from '../dto/response-non-deleted-products-percentage.dto';
 import { NonDeletedProductsReportDto } from '../dto/count-products-for-non-deleted-products-report.dto';
 import { ResponseTotalProductsByProductBrandDto } from '../dto/reponse-total-products-by-proudct-brand.dto';
-
+import { ResponseFilterProductsDto } from '../dto/response-filter-products.dto';
+import { FilterProductsDto } from '../dto/filter-products.dto';
 @Controller({
   path: 'products',
   version: '1',
@@ -35,6 +36,21 @@ export class ProductsController {
     this.productsService.saveProduct(message).catch((error) => {
       this.logger.error(error);
     });
+  }
+
+  @Get('deleted-products')
+  @ApiResponse({
+    status: 200,
+    type: ResponseFilterProductsDto,
+  })
+  @ApiResponse({
+    status: 404,
+    type: ErrorResponseDto,
+  })
+  getDeletedProducts(
+    @Query() filterProductsDto: FilterProductsDto,
+  ): Promise<ResponseFilterProductsDto> {
+    return this.productsService.getDeletedProducts(filterProductsDto);
   }
 
   @Post('fetch')
