@@ -30,7 +30,7 @@ export class Product extends Document {
   @Prop()
   productStock: number;
 
-  @Prop()
+  @Prop({ default: true })
   productIsActive: boolean;
 
   @Prop({ default: Date.now })

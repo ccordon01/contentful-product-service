@@ -3,7 +3,12 @@ import { CronExpression } from '@nestjs/schedule';
 import { Cron } from '@nestjs/schedule';
 import { MessagesService } from 'src/common/modules/rabbitmq/messages.service';
 import { HttpApiClientService } from 'src/common/modules/http-api-client/http-api-client.service';
-import { ProductsResponseDto } from 'src/common/dto/products-response.dto';
+import {
+  ProductFieldsDto,
+  ProductsResponseDto,
+} from 'src/common/dto/products-response.dto';
+import { ProductsRepository } from './repository/products.repository';
+
 @Injectable()
 export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
@@ -11,6 +16,7 @@ export class ProductsService {
   constructor(
     private readonly messagesService: MessagesService,
     private readonly httpApiClientService: HttpApiClientService,
+    private readonly productsRepository: ProductsRepository,
   ) {}
 
   /**
@@ -40,6 +46,46 @@ export class ProductsService {
       const productFields = product.fields;
       this.messagesService.sendMessage({
         message: productFields,
+      });
+    }
+  }
+
+  async saveProduct(message: { message: ProductFieldsDto }) {
+    const product: ProductFieldsDto = { ...message.message };
+
+    const existingProduct =
+      await this.productsRepository.getProductByProductSku(product.sku);
+    if (existingProduct) {
+      this.logger.log(`Product ${product.sku} already exists`);
+
+      if (existingProduct.productIsActive) {
+        this.logger.log(`Product ${product.sku} is active, updating...`);
+        await this.productsRepository.updateProduct({
+          productSku: product.sku,
+          productName: product.name,
+          productBrand: product.brand,
+          productModel: product.model,
+          productCategory: product.category,
+          productColor: product.color,
+          productPrice: product.price,
+          productCurrency: product.currency,
+          productStock: product.stock,
+        });
+      } else {
+        this.logger.log(`Product ${product.sku} is deleted, ignoring...`);
+      }
+    } else {
+      this.logger.log(`Product ${product.sku} does not exist, creating...`);
+      await this.productsRepository.createProduct({
+        productSku: product.sku,
+        productName: product.name,
+        productBrand: product.brand,
+        productModel: product.model,
+        productCategory: product.category,
+        productColor: product.color,
+        productPrice: product.price,
+        productCurrency: product.currency,
+        productStock: product.stock,
       });
     }
   }
