@@ -29,7 +29,21 @@ describe('HttpApiClientService', () => {
       ),
     };
 
-    const service = new HttpApiClientService(mockHttpService as any);
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const config = {
+          CONTENTFUL_URL: 'https://cdn.contentful.com',
+          CONTENTFUL_SPACE_ID: 'test-space',
+          CONTENTFUL_ENVIRONMENT: 'master',
+        };
+        return config[key] as string;
+      }),
+    };
+
+    const service = new HttpApiClientService(
+      mockHttpService as any,
+      mockConfigService as any,
+    );
 
     try {
       await service.fetchProducts();
@@ -183,7 +197,21 @@ describe('HttpApiClientService', () => {
       ),
     };
 
-    const service = new HttpApiClientService(mockHttpService as any);
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const config = {
+          CONTENTFUL_URL: 'https://cdn.contentful.com',
+          CONTENTFUL_SPACE_ID: 'test-space',
+          CONTENTFUL_ENVIRONMENT: 'master',
+        };
+        return config[key] as string;
+      }),
+    };
+
+    const service = new HttpApiClientService(
+      mockHttpService as any,
+      mockConfigService as any,
+    );
 
     const products = await service.fetchProducts();
 
@@ -302,7 +330,21 @@ describe('HttpApiClientService', () => {
       ),
     };
 
-    const service = new HttpApiClientService(mockHttpService as any);
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const config = {
+          CONTENTFUL_URL: 'https://cdn.contentful.com',
+          CONTENTFUL_SPACE_ID: 'test-space',
+          CONTENTFUL_ENVIRONMENT: 'master',
+        };
+        return config[key] as string;
+      }),
+    };
+
+    const service = new HttpApiClientService(
+      mockHttpService as any,
+      mockConfigService as any,
+    );
 
     try {
       await service.fetchProducts();
@@ -320,7 +362,21 @@ describe('HttpApiClientService', () => {
       ),
     };
 
-    const service = new HttpApiClientService(mockHttpService as any);
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const config = {
+          CONTENTFUL_URL: 'https://cdn.contentful.com',
+          CONTENTFUL_SPACE_ID: 'test-space',
+          CONTENTFUL_ENVIRONMENT: 'master',
+        };
+        return config[key] as string;
+      }),
+    };
+
+    const service = new HttpApiClientService(
+      mockHttpService as any,
+      mockConfigService as any,
+    );
 
     try {
       await service.fetchProducts();
@@ -339,7 +395,21 @@ describe('HttpApiClientService', () => {
       ),
     };
 
-    const service = new HttpApiClientService(mockHttpService as any);
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        const config = {
+          CONTENTFUL_URL: 'https://cdn.contentful.com',
+          CONTENTFUL_SPACE_ID: 'test-space',
+          CONTENTFUL_ENVIRONMENT: 'master',
+        };
+        return config[key] as string;
+      }),
+    };
+
+    const service = new HttpApiClientService(
+      mockHttpService as any,
+      mockConfigService as any,
+    );
 
     try {
       await service.fetchProducts();
