@@ -5,6 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { CreateProductDto } from '../dto/create-product.dto';
 import { UpdateProductDto } from '../dto/update-product.dto';
 import { FilterProductsDto } from '../dto/filter-products.dto';
+import { CountProductsForNonDeletedProductsReportRepositoryDto } from '../dto/count-products-for-non-deleted-products-report.dto';
 
 @Injectable()
 export class ProductsRepository {
@@ -105,5 +106,76 @@ export class ProductsRepository {
       totalCount,
       products,
     };
+  }
+
+  async countProducts(): Promise<number> {
+    const count = await this.productModel.countDocuments().exec();
+    return count;
+  }
+
+  async countDeletedProducts(): Promise<number> {
+    const count = await this.productModel
+      .countDocuments({
+        productIsActive: false,
+      })
+      .exec();
+    return count;
+  }
+
+  async countProductsForNonDeletedProductsReport(
+    countProductsForNonDeletedProductsReportRepositoryDto: CountProductsForNonDeletedProductsReportRepositoryDto,
+  ): Promise<number> {
+    const {
+      productWithPrice,
+      productCreatedAtStartDate,
+      productCreatedAtEndDate,
+    } = countProductsForNonDeletedProductsReportRepositoryDto;
+    const query = {};
+
+    if (productWithPrice === true) {
+      query['productPrice'] = { $exists: true, $ne: null };
+    } else if (productWithPrice === false) {
+      query['$or'] = [
+        { productPrice: { $exists: false } },
+        { productPrice: null },
+      ];
+    }
+
+    if (productCreatedAtStartDate && productCreatedAtEndDate) {
+      query['productCreatedAt'] = {
+        $gte: productCreatedAtStartDate,
+        $lte: productCreatedAtEndDate,
+      };
+    }
+
+    const count = await this.productModel.countDocuments(query).exec();
+
+    return count;
+  }
+
+  async totalProductsByProductBrand(): Promise<
+    { productBrand: string; count: number }[]
+  > {
+    const result = await this.productModel
+      .aggregate([
+        {
+          $group: {
+            _id: '$productBrand',
+            count: { $sum: 1 },
+          },
+        },
+        {
+          $project: {
+            productBrand: '$_id',
+            count: 1,
+          },
+        },
+        {
+          $sort: { productBrand: 1 },
+        },
+      ])
+      .exec();
+
+    return result as { productBrand: string; count: number }[];
   }
 }

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   InternalServerErrorException,
@@ -18,6 +19,12 @@ import { FilterProductsDto } from './dto/filter-products.dto';
 import { ResponseFilterProductsDto } from './dto/response-filter-products.dto';
 import { productsRepositoryMapper } from './helpers/mappers/products-repository.mapper';
 import { Product } from './repository/schemas/product.schema';
+import { ResponseDeletedProductsPercentageDto } from './dto/response-deleted-products-percentage.dto';
+import { ResponseNonDeletedProductsPercentageDto } from './dto/response-non-deleted-products-percentage.dto';
+import { NonDeletedProductsReportDto } from './dto/count-products-for-non-deleted-products-report.dto';
+import { startOfDayUTC } from 'src/common/utils/start-of-day-utc';
+import { endOfDayUTC } from 'src/common/utils/end-of-day-utc';
+import { ResponseTotalProductsByProductBrandDto } from './dto/reponse-total-products-by-proudct-brand.dto';
 
 @Injectable()
 export class ProductsService {
@@ -189,6 +196,142 @@ export class ProductsService {
       this.logger.error('Error activating product:', error);
       throw new InternalServerErrorException(
         'An error occurred while activating the product.',
+      );
+    }
+  }
+
+  /**
+   * Calculates and returns the percentage of deleted products compared to the total number of products.
+   *
+   * @returns {Promise<ResponseDeletedProductsPercentageDto>} - The percentage of deleted products and additional information.
+   */
+  async percentageDeletedProducts(): Promise<ResponseDeletedProductsPercentageDto> {
+    try {
+      const totalDeletedProducts =
+        await this.productsRepository.countDeletedProducts();
+      const totalProducts = await this.productsRepository.countProducts();
+
+      let percentageDeletedProducts = 0;
+
+      if (totalProducts > 0) {
+        percentageDeletedProducts =
+          (totalDeletedProducts / totalProducts) * 100;
+      }
+
+      return {
+        data: {
+          totalDeletedProducts,
+          totalProducts,
+        },
+        deletedProductsPercentage: {
+          percentageDeletedProducts: `${percentageDeletedProducts.toFixed(2)}%`,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error generating deleted products report:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while generating deleted products report.',
+      );
+    }
+  }
+
+  /**
+   * Calculates and returns the percentage of non-deleted products compared to the total number of products.
+   *
+   * @param {NonDeletedProductsReportDto} nonDeletedProductsReportDto - The filter criteria for non-deleted products.
+   * @returns {Promise<ResponseNonDeletedProductsPercentageDto>} - The percentage of non-deleted products and additional information.
+   */
+  async percentageNonDeletedProducts(
+    nonDeletedProductsReportDto: NonDeletedProductsReportDto,
+  ): Promise<ResponseNonDeletedProductsPercentageDto> {
+    try {
+      const {
+        productWithPrice,
+        productCreatedAtEndDate,
+        productCreatedAtStartDate,
+      } = nonDeletedProductsReportDto;
+
+      if (
+        (productCreatedAtStartDate && !productCreatedAtEndDate) ||
+        (!productCreatedAtStartDate && productCreatedAtEndDate)
+      ) {
+        throw new BadRequestException(
+          'Both start and end dates must be provided together',
+        );
+      }
+
+      if (
+        productCreatedAtStartDate &&
+        productCreatedAtEndDate &&
+        productCreatedAtStartDate > productCreatedAtEndDate
+      ) {
+        throw new BadRequestException(
+          'Start date cannot be greater than end date.',
+        );
+      }
+
+      const totalNonDeletedProducts =
+        await this.productsRepository.countProductsForNonDeletedProductsReport({
+          productWithPrice: productWithPrice ?? true,
+          productCreatedAtStartDate:
+            productCreatedAtStartDate &&
+            startOfDayUTC(productCreatedAtStartDate),
+          productCreatedAtEndDate:
+            productCreatedAtEndDate && endOfDayUTC(productCreatedAtEndDate),
+        });
+
+      const totalProducts = await this.productsRepository.countProducts();
+
+      let percentageNonDeletedProducts = 0;
+
+      if (totalProducts > 0) {
+        percentageNonDeletedProducts =
+          (totalNonDeletedProducts / totalProducts) * 100;
+      }
+
+      return {
+        data: {
+          totalNonDeletedProducts,
+          totalProducts,
+        },
+        deletedNonProductsPercentage: {
+          percentageNonDeletedProducts: `${percentageNonDeletedProducts.toFixed(2)}%`,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error generating non-deleted products report:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while generating non-deleted products report.',
+      );
+    }
+  }
+
+  /**
+   * Calculates and returns the total number of products for each product brand.
+   *
+   * @returns {Promise<ResponseTotalProductsByProductBrandDto>} - The total number of products for each product brand and additional information.
+   */
+  async totalProductsByProductBrand(): Promise<ResponseTotalProductsByProductBrandDto> {
+    try {
+      const totalProductsByProductBrand =
+        await this.productsRepository.totalProductsByProductBrand();
+      const totalProducts = await this.productsRepository.countProducts();
+
+      return {
+        data: {
+          totalProducts,
+        },
+        totalProductsByProductBrand: totalProductsByProductBrand.map(
+          (brand) => ({
+            productBrand: brand.productBrand,
+            totalProducts: brand.count,
+          }),
+        ),
+      };
+    } catch (error) {
+      this.logger.error('Error fetching product brand report:', error);
+      throw new InternalServerErrorException(
+        'An error occurred while fetching product brand report.',
       );
     }
   }
