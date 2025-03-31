@@ -7,10 +7,10 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { HttpApiClientModule } from './common/modules/http-api-client/http-api-client.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
-import { RouterModule } from '@nestjs/core';
+import { APP_GUARD, RouterModule } from '@nestjs/core';
 import { ConfigModule } from './common/modules/config/config.module';
 import { ConfigService } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -43,6 +43,11 @@ import { ThrottlerModule } from '@nestjs/throttler';
     ]),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
