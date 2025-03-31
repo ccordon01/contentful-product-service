@@ -65,6 +65,8 @@ docker-compose up --build
 
 This command starts the application and MongoDB services. The application will be available at `http://localhost:3100`.
 
+## Usage and How it works
+
 ### Populate the Database for the First Time
 
 The application is configured to fetch data from Contentful every hour. To manually trigger data fetching and populate the database, you can use the public endpoint:
