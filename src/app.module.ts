@@ -8,10 +8,19 @@ import { HttpApiClientModule } from './common/modules/http-api-client/http-api-c
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { RouterModule } from '@nestjs/core';
+import { ConfigModule } from './common/modules/config/config.module';
+import { ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
-    MongooseModule.forRoot(process.env.MONGODB_URI as string),
+    ConfigModule,
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     ScheduleModule.forRoot(),
     HttpApiClientModule,
     AuthModule,

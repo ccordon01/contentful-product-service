@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AxiosError } from 'axios';
 import { catchError, firstValueFrom } from 'rxjs';
 import { ProductsResponseDto } from 'src/common/dto/products-response.dto';
@@ -7,7 +8,37 @@ import { ProductsResponseDto } from 'src/common/dto/products-response.dto';
 @Injectable()
 export class HttpApiClientService {
   private readonly logger = new Logger(HttpApiClientService.name);
-  constructor(private readonly httpService: HttpService) {}
+  private readonly baseUrl: string;
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.baseUrl = this.initializeBaseUrl();
+  }
+
+  private initializeBaseUrl(): string {
+    const contentfulUrl = this.configService.get<string>('CONTENTFUL_URL');
+    const spaceId = this.configService.get<string>('CONTENTFUL_SPACE_ID');
+    const environment = this.configService.get<string>(
+      'CONTENTFUL_ENVIRONMENT',
+    );
+
+    if (!contentfulUrl || !spaceId || !environment) {
+      throw new Error('Contentful configuration is missing');
+    }
+
+    const url = `${contentfulUrl}/spaces/${spaceId}/environments/${environment}/entries`;
+
+    try {
+      new URL(url);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      throw new Error(`Invalid Contentful URL: ${url}`);
+    }
+
+    return url;
+  }
 
   async fetchProducts(
     skip: number = 0,
@@ -16,17 +47,14 @@ export class HttpApiClientService {
     try {
       const { data } = await firstValueFrom(
         this.httpService
-          .get<ProductsResponseDto>(
-            `${process.env.CONTENTFUL_URL}/spaces/${process.env.CONTENTFUL_SPACE_ID}/environments/${process.env.CONTENTFUL_ENVIRONMENT}/entries`,
-            {
-              params: {
-                access_token: process.env.CONTENTFUL_ACCESS_TOKEN,
-                content_type: process.env.CONTENTFUL_CONTENT_TYPE,
-                skip: skip,
-                limit: limit,
-              },
+          .get<ProductsResponseDto>(this.baseUrl, {
+            params: {
+              access_token: this.configService.get('CONTENTFUL_ACCESS_TOKEN'),
+              content_type: this.configService.get('CONTENTFUL_CONTENT_TYPE'),
+              skip: skip,
+              limit: limit,
             },
-          )
+          })
           .pipe(
             catchError((error: AxiosError) => {
               this.logger.error(error?.response?.data);

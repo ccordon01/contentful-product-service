@@ -1,0 +1,1 @@
+export const DEFAULT_ACCESS_TOKEN_DURATION = '3h';

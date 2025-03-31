@@ -3,19 +3,26 @@ import { MessagesService } from './messages.service';
 import { ClientsModule } from '@nestjs/microservices';
 import { Transport } from '@nestjs/microservices';
 import { RABBITMQ_SERVICE, CREATE_PRODUCTS_QUEUE } from './constants';
+import { ConfigModule } from '../config/config.module';
+import { ConfigService } from '@nestjs/config';
 @Module({
   imports: [
-    ClientsModule.register([
+    ConfigModule,
+    ClientsModule.registerAsync([
       {
         name: RABBITMQ_SERVICE,
-        transport: Transport.RMQ,
-        options: {
-          urls: [process.env.RABBITMQ_URL as string],
-          queue: CREATE_PRODUCTS_QUEUE,
-          queueOptions: {
-            durable: false,
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URL')!],
+            queue: CREATE_PRODUCTS_QUEUE,
+            queueOptions: {
+              durable: false,
+            },
           },
-        },
+        }),
+        inject: [ConfigService],
       },
     ]),
   ],

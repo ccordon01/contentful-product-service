@@ -8,9 +8,12 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { CREATE_PRODUCTS_QUEUE } from './common/modules/rabbitmq/constants';
 import { DocumentBuilder } from '@nestjs/swagger';
 import { SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
+
   app.setGlobalPrefix('api');
   app.enableVersioning({
     type: VersioningType.URI,
@@ -42,7 +45,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: [process.env.RABBITMQ_URL as string],
+      urls: [configService.get<string>('RABBITMQ_URL')!],
       queue: CREATE_PRODUCTS_QUEUE,
       queueOptions: {
         durable: false,
@@ -52,7 +55,7 @@ async function bootstrap() {
 
   await app.startAllMicroservices();
 
-  const port = process.env.API_PORT ?? 3000;
+  const port = configService.get<number>('API_PORT') ?? 3000;
   await app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
   });
