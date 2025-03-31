@@ -30,6 +30,7 @@ describe('AuthService', () => {
   it('should return an access token', async () => {
     const result = await service.signIn();
     expect(result).toEqual({ accesToken: 'mockAccessToken' });
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(jwtService.signAsync).toHaveBeenCalled();
   });
 });

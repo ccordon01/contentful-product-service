@@ -32,6 +32,7 @@ describe('AuthController', () => {
   it('should return an access token', async () => {
     const result = await controller.signIn();
     expect(result).toEqual({ accesToken: 'mockAccessToken' });
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(authService.signIn).toHaveBeenCalled();
   });
 });

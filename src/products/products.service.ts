@@ -8,8 +8,8 @@ import {
 } from '@nestjs/common';
 import { CronExpression } from '@nestjs/schedule';
 import { Cron } from '@nestjs/schedule';
-import { MessagesService } from 'src/common/modules/rabbitmq/messages.service';
-import { HttpApiClientService } from 'src/common/modules/http-api-client/http-api-client.service';
+import { MessagesService } from '../common/modules/rabbitmq/messages.service';
+import { HttpApiClientService } from '../common/modules/http-api-client/http-api-client.service';
 import {
   ProductFieldsDto,
   ProductsResponseDto,
@@ -22,8 +22,8 @@ import { Product } from './repository/schemas/product.schema';
 import { ResponseDeletedProductsPercentageDto } from './dto/response-deleted-products-percentage.dto';
 import { ResponseNonDeletedProductsPercentageDto } from './dto/response-non-deleted-products-percentage.dto';
 import { NonDeletedProductsReportDto } from './dto/count-products-for-non-deleted-products-report.dto';
-import { startOfDayUTC } from 'src/common/utils/start-of-day-utc';
-import { endOfDayUTC } from 'src/common/utils/end-of-day-utc';
+import { startOfDayUTC } from '../common/utils/start-of-day-utc';
+import { endOfDayUTC } from '../common/utils/end-of-day-utc';
 import { ResponseTotalProductsByProductBrandDto } from './dto/reponse-total-products-by-proudct-brand.dto';
 
 @Injectable()
@@ -162,6 +162,12 @@ export class ProductsService {
         productStock: 0,
       });
     } catch (error) {
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
       this.logger.error('Error deleting product:', error);
       throw new InternalServerErrorException(
         'An error occurred while deleting the product.',
